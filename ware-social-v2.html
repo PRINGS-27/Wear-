@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>WARE — Fashion Intelligence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Syne:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap');
+
+:root {
+  --ink: #0c0b0a;
+  --s1: #161412;
+  --s2: #1e1c19;
+  --s3: #252320;
+  --gold: #b8935a;
+  --gold2: #d4aa70;
+  --stone: #7a7670;
+  --stone2: #a09b94;
+  --text: #e6e2db;
+  --dim: #4a4844;
+  --border: rgba(255,255,255,0.06);
+  --borderg: rgba(184,147,90,0.25);
+  --green: #4d7a5e;
+  --green2: #6a9e7a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ink); font-family: 'Syne', sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+#app { width: 100vw; height: 100dvh; position: relative; overflow: hidden; }
+
+.screen {
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+  opacity: 0; pointer-events: none;
+  transform: translateX(24px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  scrollbar-width: none; background: var(--ink);
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active { opacity: 1; pointer-events: all; transform: translateX(0); }
+.screen.exit { opacity: 0; transform: translateX(-24px); pointer-events: none; }
+
+/* BUTTONS */
+.btn { width: 100%; border: none; cursor: pointer; border-radius: 14px; font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; padding: 1.05rem 1.5rem; transition: all 0.18s; }
+.btn:active { transform: scale(0.97); opacity: 0.88; }
+.btn-gold { background: var(--gold); color: var(--ink); }
+.btn-ghost { background: none; border: 1px solid var(--border); color: var(--stone2); margin-top: 0.65rem; }
+
+/* SPLASH */
+#splash { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 32px; text-align: center; min-height: 100dvh; }
+.splash-glow { position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(184,147,90,0.07) 0%, transparent 70%); pointer-events: none; }
+.logo { font-family: 'Playfair Display', serif; font-size: 4rem; font-weight: 400; letter-spacing: 0.4em; color: var(--gold); animation: rise 0.8s ease both; }
+.logo-tag { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.4em; color: var(--stone); text-transform: uppercase; margin-bottom: 3.5rem; animation: rise 0.8s 0.1s ease both; }
+.tagline { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-style: italic; color: var(--text); line-height: 1.45; margin-bottom: 0.7rem; animation: rise 0.8s 0.3s ease both; }
+.tagline-sub { font-size: 0.78rem; color: var(--stone); line-height: 1.7; margin-bottom: 4rem; animation: rise 0.8s 0.4s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ONBOARD */
+#ob1, #ob2, #ob3 { display: flex; flex-direction: column; min-height: 100dvh; }
+.ob-top { padding: max(52px, env(safe-area-inset-top)) 28px 20px; }
+.step-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--s2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 1.2rem; }
+.ob-h { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; line-height: 1.15; color: var(--text); margin-bottom: 0.6rem; }
+.ob-h em { font-style: italic; color: var(--gold); }
+.ob-p { font-size: 0.8rem; color: var(--stone); line-height: 1.65; }
+.ob-body { flex: 1; padding: 8px 28px; }
+.ob-foot { padding: 16px 28px max(32px, env(safe-area-inset-bottom)); }
+.pgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin: 16px 0; }
+.pslot { aspect-ratio: 3/4; border-radius: 14px; border: 1.5px dashed rgba(255,255,255,0.1); background: var(--s1); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s; }
+.pslot:active { transform: scale(0.95); }
+.pslot.ok { border-color: var(--borderg); }
+.psi { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 8px; gap: 3px; }
+.psi-t { border-radius: 8px 8px 3px 3px; flex: 1.2; }
+.psi-m { border-radius: 3px; height: 8px; }
+.psi-b { border-radius: 3px 3px 8px 8px; flex: 1.5; }
+.pchk { position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 0.52rem; color: var(--ink); font-weight: 800; }
+.plus-ico { font-size: 1.3rem; opacity: 0.18; }
+.plus-lbl { font-size: 0.52rem; color: var(--stone); margin-top: 4px; }
+.prog { display: flex; gap: 6px; margin-bottom: 1.1rem; }
+.pdot { height: 3px; border-radius: 2px; background: var(--s3); flex: 1; transition: all 0.3s; }
+.pdot.on { background: var(--gold); }
+.pdot.done { background: var(--borderg); }
+.item-input-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.item-row-input { display: flex; align-items: center; gap: 10px; background: var(--s1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.iri-color { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; }
+.iri-label { flex: 1; font-size: 0.8rem; color: var(--text); }
+.iri-tag { font-family: 'DM Mono', monospace; font-size: 0.56rem; color: var(--gold); background: rgba(184,147,90,0.1); border: 1px solid var(--borderg); border-radius: 6px; padding: 2px 7px; }
+.body-options { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 12px 0; }
+.bopt { background: var(--s1); border: 1.5px solid var(--border); border-radius: 14px; padding: 16px 14px; cursor: pointer; text-align: center; transition: all 0.2s; }
+.bopt:active { transform: scale(0.96); }
+.bopt.sel { border-color: var(--gold); background: rgba(184,147,90,0.07); }
+.bopt-icon { font-size: 1.6rem; margin-bottom: 6px; }
+.bopt-name { font-size: 0.78rem; color: var(--text); font-weight: 500; }
+.bopt-desc { font-size: 0.62rem; color: var(--stone); margin-top: 2px; }
+
+/* PROCESSING */
+#processing { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 32px; text-align: center; min-height: 100dvh; }
+.ring { width: 88px; height: 88px; border-radius: 50%; border: 1.5px solid var(--s3); border-top-color: var(--gold); animation: spin 1.1s linear infinite; margin-bottom: 2rem; position: relative; }
+.ring::after { content: ''; position: absolute; inset: 9px; border-radius: 50%; border: 1px solid transparent; border-top-color: rgba(184,147,90,0.2); animation: spin 2s linear infinite reverse; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.proc-lbl { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; margin-bottom: 0.5rem; }
+.proc-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-style: italic; color: var(--text); margin-bottom: 2.5rem; }
+.plist { width: 100%; text-align: left; }
+.pitem { display: flex; align-items: center; gap: 10px; padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--dim); }
+.pitem.done { color: var(--text); }
+.pitem.done .pico { color: var(--gold); }
+.pitem.act { color: var(--gold2); }
+.pico { width: 14px; text-align: center; }
+
+/* PROFILE */
+#profile { min-height: 100dvh; }
+.prof-hero { padding: max(52px,env(safe-area-inset-top)) 28px 26px; background: linear-gradient(170deg, var(--s1) 0%, var(--ink) 100%); border-bottom: 1px solid var(--border); }
+.hero-lbl { font-family: 'DM Mono', monospace; font-size: 0.57rem; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; margin-bottom: 0.6rem; }
+.archetype { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 400; color: var(--text); line-height: 1.1; margin-bottom: 0.5rem; }
+.archetype em { font-style: italic; color: var(--gold); }
+.arch-desc { font-size: 0.8rem; color: var(--stone); line-height: 1.65; margin-bottom: 1.2rem; }
+.palette { display: flex; gap: 8px; align-items: center; }
+.sw { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.07); }
+.sw-lbl { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--stone); margin-left: 4px; }
+.prof-body { padding: 22px 28px max(80px, calc(env(safe-area-inset-bottom) + 70px)); }
+.slbl { font-family: 'DM Mono', monospace; font-size: 0.57rem; letter-spacing: 0.16em; color: var(--stone); text-transform: uppercase; margin: 1.4rem 0 0.9rem; }
+.stat { display: flex; align-items: center; gap: 10px; margin-bottom: 0.7rem; }
+.sname { font-size: 0.78rem; color: var(--text); width: 108px; flex-shrink: 0; }
+.strk { flex: 1; height: 3px; background: var(--s3); border-radius: 2px; overflow: hidden; }
+.sfil { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--gold), var(--gold2)); }
+.sval { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--gold); width: 26px; text-align: right; }
+.orow { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; margin: 0 -28px; padding-left: 28px; padding-right: 28px; }
+.orow::-webkit-scrollbar { display: none; }
+.ocard { flex-shrink: 0; width: 145px; background: var(--s1); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+.ocard:active { transform: scale(0.96); }
+.ocard-img { height: 172px; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+.ocard-info { padding: 10px 13px 13px; }
+.ocard-score { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--gold); margin-bottom: 2px; }
+.ocard-name { font-size: 0.78rem; color: var(--text); font-weight: 500; }
+.ocard-ctx { font-size: 0.62rem; color: var(--stone); margin-top: 2px; }
+
+/* HOME */
+#home { min-height: 100dvh; }
+.home-top { padding: max(52px,env(safe-area-inset-top)) 28px 18px; }
+.date-line { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.14em; color: var(--stone); text-transform: uppercase; margin-bottom: 0.35rem; }
+.home-name { font-family: 'Playfair Display', serif; font-size: 1.85rem; font-weight: 400; color: var(--text); }
+.home-name em { font-style: italic; color: var(--gold); }
+.insight-card { margin: 14px 28px 0; background: var(--s1); border: 1px solid var(--border); border-left: 2px solid var(--gold); border-radius: 16px; padding: 15px 17px; cursor: pointer; transition: all 0.2s; }
+.insight-card:active { transform: scale(0.98); }
+.ic-lbl { font-family: 'DM Mono', monospace; font-size: 0.54rem; letter-spacing: 0.15em; color: var(--gold); text-transform: uppercase; margin-bottom: 0.32rem; }
+.ic-text { font-size: 0.8rem; color: var(--text); line-height: 1.55; }
+.ic-cta { font-size: 0.65rem; color: var(--stone); margin-top: 0.3rem; }
+.hsec { padding: 20px 28px 0; }
+.hsh { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.hst { font-family: 'DM Mono', monospace; font-size: 0.57rem; letter-spacing: 0.14em; color: var(--stone); text-transform: uppercase; }
+.hmore { font-size: 0.68rem; color: var(--gold); background: none; border: none; cursor: pointer; font-family: 'Syne', sans-serif; }
+.dscroll { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin: 0 -28px; padding: 0 28px 4px; }
+.dscroll::-webkit-scrollbar { display: none; }
+.dcard { flex-shrink: 0; width: 158px; background: var(--s1); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+.dcard.featured { border-color: var(--borderg); }
+.dcard:active { transform: scale(0.96); }
+.dcard-img { height: 188px; padding: 11px; display: flex; flex-direction: column; gap: 4px; position: relative; }
+.badge { position: absolute; top: 8px; left: 8px; background: var(--gold); color: var(--ink); font-family: 'DM Mono', monospace; font-size: 0.52rem; font-weight: 700; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 6px; }
+.dscore { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--gold2); padding: 2px 7px; border-radius: 6px; backdrop-filter: blur(6px); }
+.dcard-info { padding: 10px 13px 14px; }
+.dname { font-size: 0.8rem; color: var(--text); font-weight: 500; margin-bottom: 2px; }
+.dctx { font-size: 0.63rem; color: var(--stone); }
+.shopcard { background: var(--s1); border: 1px solid var(--border); border-radius: 16px; display: flex; overflow: hidden; cursor: pointer; margin-bottom: 10px; transition: transform 0.2s; }
+.shopcard:active { transform: scale(0.98); }
+.shopimg { width: 92px; flex-shrink: 0; display: flex; flex-direction: column; padding: 10px; gap: 4px; }
+.shopinfo { padding: 14px 13px 14px 10px; flex: 1; }
+.shoptag { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.1em; color: var(--green2); text-transform: uppercase; margin-bottom: 0.3rem; }
+.shopname { font-size: 0.84rem; color: var(--text); font-weight: 500; margin-bottom: 0.2rem; }
+.shopunlock { font-size: 0.66rem; color: var(--stone); line-height: 1.45; }
+.shopprice { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--gold); margin-top: 0.4rem; }
+
+/* OUTFIT DETAIL */
+#outfit { min-height: 100dvh; }
+.od-hero { height: 52vh; min-height: 300px; background: var(--s1); position: relative; display: flex; flex-direction: column; padding: max(52px,env(safe-area-inset-top)) 28px 24px; }
+.back-btn { position: absolute; top: max(52px,env(safe-area-inset-top)); left: 22px; width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.45); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.95rem; color: var(--text); z-index: 10; transition: all 0.2s; backdrop-filter: blur(8px); }
+.back-btn:active { transform: scale(0.9); }
+.od-clothes { position: absolute; right: 28px; top: max(52px,env(safe-area-inset-top)); bottom: 24px; width: 115px; display: flex; flex-direction: column; gap: 5px; }
+.od-piece { border-radius: 10px; flex: 1; }
+.od-score-big { font-family: 'Playfair Display', serif; font-size: 4rem; color: var(--gold); font-weight: 400; line-height: 1; position: absolute; bottom: 24px; left: 28px; }
+.od-score-lbl { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.1em; color: var(--stone); position: absolute; bottom: 30px; left: 128px; }
+.od-body { padding: 24px 28px max(80px, calc(env(safe-area-inset-bottom) + 70px)); }
+.od-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--text); margin-bottom: 0.2rem; }
+.od-ctx { font-size: 0.75rem; color: var(--stone); margin-bottom: 1.4rem; }
+.why-box { background: var(--s1); border: 1px solid var(--border); border-left: 2px solid var(--gold); border-radius: 14px; padding: 14px 16px; margin-bottom: 1.4rem; }
+.why-lbl { font-family: 'DM Mono', monospace; font-size: 0.54rem; letter-spacing: 0.12em; color: var(--gold); text-transform: uppercase; margin-bottom: 0.35rem; }
+.why-txt { font-size: 0.8rem; color: var(--text); line-height: 1.62; }
+.pieces { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+.piece-row { display: flex; align-items: center; gap: 12px; background: var(--s1); border: 1px solid var(--border); border-radius: 13px; padding: 12px 14px; }
+.pc { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; }
+.pc-name { font-size: 0.8rem; color: var(--text); font-weight: 500; }
+.pc-cat { font-size: 0.63rem; color: var(--stone); margin-top: 2px; }
+.pc-vs { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--gold); }
+
+/* CONFIRM */
+#confirm { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 32px max(40px, env(safe-area-inset-bottom)); text-align: center; min-height: 100dvh; }
+.conf-star { font-size: 3rem; margin-bottom: 1.5rem; animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.conf-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-style: italic; color: var(--text); margin-bottom: 0.4rem; }
+.conf-sub { font-size: 0.78rem; color: var(--stone); line-height: 1.6; margin-bottom: 1.5rem; }
+.conf-ins { background: var(--s1); border: 1px solid var(--border); border-left: 2px solid var(--gold); border-radius: 14px; padding: 14px 16px; margin-bottom: 2rem; text-align: left; width: 100%; }
+.ci-lbl { font-family: 'DM Mono', monospace; font-size: 0.54rem; letter-spacing: 0.12em; color: var(--gold); text-transform: uppercase; margin-bottom: 0.35rem; }
+.ci-txt { font-size: 0.8rem; color: var(--text); line-height: 1.55; }
+
+/* ══════════════════════
+   SOCIAL — FULL REDESIGN
+══════════════════════ */
+#social { min-height: 100dvh; }
+
+.soc-header {
+  padding: max(52px,env(safe-area-inset-top)) 28px 0;
+  background: var(--ink);
+}
+.soc-title { font-family: 'Playfair Display', serif; font-size: 1.75rem; color: var(--text); margin-bottom: 0.2rem; }
+.soc-sub { font-size: 0.74rem; color: var(--stone); margin-bottom: 1.2rem; }
+
+/* Tab switcher */
+.tab-bar {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+.tab-btn {
+  flex: 1; background: none; border: none; cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--stone); padding: 12px 0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s; margin-bottom: -1px;
+}
+.tab-btn.on { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* Tab panels */
+.tab-panel { display: none; padding: 16px 0 max(80px, calc(env(safe-area-inset-bottom) + 70px)); }
+.tab-panel.on { display: block; }
+
+/* ── CIRCLE TAB ── */
+.friend-card {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: 18px; padding: 16px;
+  margin: 0 28px 10px; transition: all 0.2s;
+}
+.fr-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.fr-av { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; border: 1px solid var(--border); }
+.fr-name { font-size: 0.86rem; color: var(--text); font-weight: 500; }
+.fr-arch { font-size: 0.63rem; color: var(--stone); margin-top: 2px; }
+.fr-ovn { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--gold); }
+.fr-ovl { font-size: 0.5rem; color: var(--stone); text-align: right; }
+.fr-thumbs { display: flex; gap: 6px; margin-bottom: 10px; }
+.fr-th { flex: 1; height: 72px; border-radius: 11px; background: var(--s2); padding: 7px; display: flex; flex-direction: column; gap: 3px; }
+.fr-activity { font-size: 0.72rem; color: var(--stone2); padding: 10px 0 0; border-top: 1px solid var(--border); }
+.fr-activity strong { color: var(--text); font-weight: 500; }
+.fr-react { font-size: 0.68rem; color: var(--stone); font-style: italic; margin-top: 6px; }
+.fr-react strong { color: var(--gold2); font-style: normal; }
+
+/* reactions row */
+.react-row { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; }
+.react-pill {
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 11px;
+  font-size: 0.64rem; color: var(--stone2);
+  cursor: pointer; transition: all 0.2s;
+  font-family: 'DM Mono', monospace;
+}
+.react-pill:active { transform: scale(0.95); }
+.react-pill.reacted { background: rgba(184,147,90,0.1); border-color: var(--borderg); color: var(--gold); }
+
+/* ── DISCOVER TAB ── */
+.discover-search {
+  margin: 0 28px 16px;
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.discover-search-icon { font-size: 0.9rem; color: var(--stone); }
+.discover-search-txt { font-size: 0.8rem; color: var(--stone); font-family: 'DM Mono', monospace; letter-spacing: 0.05em; }
+
+.discover-grid { display: flex; flex-direction: column; gap: 10px; padding: 0 28px; }
+
+.creator-card {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: 18px; overflow: hidden;
+  cursor: pointer; transition: all 0.2s;
+}
+.creator-card:active { transform: scale(0.98); }
+
+.creator-top {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px 12px;
+}
+.creator-av {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  position: relative;
+}
+.creator-av.verified::after {
+  content: '✦';
+  position: absolute; bottom: -2px; right: -2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--gold); color: var(--ink);
+  font-size: 0.42rem; display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--ink);
+}
+.creator-info { flex: 1; }
+.creator-name { font-size: 0.88rem; color: var(--text); font-weight: 500; }
+.creator-arch { font-size: 0.63rem; color: var(--stone); margin-top: 2px; }
+.creator-followers { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--stone2); margin-top: 2px; }
+
+.follow-btn {
+  background: none; border: 1px solid var(--borderg);
+  border-radius: 20px; padding: 6px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem; letter-spacing: 0.08em;
+  color: var(--gold); cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+  text-transform: uppercase;
+}
+.follow-btn:active { transform: scale(0.95); }
+.follow-btn.following {
+  background: rgba(184,147,90,0.1);
+  color: var(--stone2); border-color: var(--border);
+}
+
+/* outfit strip for creator */
+.creator-outfits {
+  display: flex; gap: 4px;
+  padding: 0 16px 14px;
+}
+.creator-outfit-thumb {
+  flex: 1; height: 88px; border-radius: 10px;
+  display: flex; flex-direction: column; padding: 7px; gap: 3px;
+  position: relative; overflow: hidden;
+}
+.creator-outfit-thumb .save-ico {
+  position: absolute; top: 6px; right: 6px;
+  font-size: 0.75rem; cursor: pointer;
+  transition: all 0.2s; opacity: 0.5;
+}
+.creator-outfit-thumb .save-ico.saved { opacity: 1; }
+
+.compat-bar {
+  margin: 0 16px 14px;
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 13px;
+  display: flex; align-items: center; gap: 10px;
+}
+.compat-label { font-family: 'DM Mono', monospace; font-size: 0.54rem; color: var(--stone); text-transform: uppercase; letter-spacing: 0.1em; flex: 1; }
+.compat-val { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--gold); font-weight: 400; }
+.compat-track { flex: 2; height: 3px; background: var(--s3); border-radius: 2px; overflow: hidden; }
+.compat-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--gold), var(--gold2)); }
+
+/* suggested profiles strip */
+.suggested-strip {
+  display: flex; gap: 10px; overflow-x: auto;
+  scrollbar-width: none; margin: 0 -28px 16px; padding: 0 28px;
+}
+.suggested-strip::-webkit-scrollbar { display: none; }
+.sug-card {
+  flex-shrink: 0; width: 110px;
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 10px;
+  text-align: center; cursor: pointer; transition: all 0.2s;
+}
+.sug-card:active { transform: scale(0.96); }
+.sug-av { width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid var(--border); }
+.sug-name { font-size: 0.72rem; color: var(--text); font-weight: 500; margin-bottom: 2px; }
+.sug-arch { font-size: 0.56rem; color: var(--stone); margin-bottom: 8px; }
+.sug-follow { background: none; border: 1px solid var(--borderg); border-radius: 20px; padding: 4px 10px; font-family: 'DM Mono', monospace; font-size: 0.52rem; color: var(--gold); cursor: pointer; transition: all 0.2s; text-transform: uppercase; width: 100%; }
+.sug-follow:active { transform: scale(0.95); }
+.sug-follow.following { border-color: var(--border); color: var(--stone); background: var(--s2); }
+
+/* ── FOLLOWING FEED ── */
+.feed-item {
+  margin: 0 28px 10px;
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: 18px; overflow: hidden;
+}
+.feed-top { display: flex; align-items: center; gap: 10px; padding: 13px 14px 10px; }
+.feed-av { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; border: 1px solid var(--border); }
+.feed-name { font-size: 0.8rem; color: var(--text); font-weight: 500; }
+.feed-time { font-family: 'DM Mono', monospace; font-size: 0.56rem; color: var(--stone); margin-top: 1px; }
+.feed-img { height: 160px; display: flex; flex-direction: column; padding: 0 14px; gap: 4px; margin-bottom: 10px; }
+.feed-bottom { padding: 0 14px 14px; display: flex; align-items: center; gap: 8px; }
+.feed-react {
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 12px;
+  font-size: 0.64rem; color: var(--stone2);
+  cursor: pointer; transition: all 0.2s;
+  font-family: 'DM Mono', monospace;
+}
+.feed-react:active { transform: scale(0.95); }
+.feed-react.on { background: rgba(184,147,90,0.1); border-color: var(--borderg); color: var(--gold); }
+.feed-save {
+  margin-left: auto;
+  background: none; border: 1px solid var(--borderg);
+  border-radius: 20px; padding: 5px 12px;
+  font-size: 0.64rem; color: var(--gold);
+  cursor: pointer; transition: all 0.2s;
+  font-family: 'DM Mono', monospace;
+}
+.feed-save:active { transform: scale(0.95); }
+.feed-compat { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--stone); background: var(--s2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 10px; }
+
+/* BOTTOM NAV */
+.bnav { position: fixed; bottom: 0; left: 0; right: 0; height: calc(64px + env(safe-area-inset-bottom)); background: rgba(12,11,10,0.94); backdrop-filter: blur(24px); border-top: 1px solid var(--border); display: none; align-items: center; justify-content: space-around; padding: 0 8px env(safe-area-inset-bottom); z-index: 200; }
+.bnav.show { display: flex; }
+.ni { display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; cursor: pointer; padding: 8px 14px; border-radius: 12px; opacity: 0.35; transition: opacity 0.2s; color: var(--text); }
+.ni.on { opacity: 1; }
+.ni:active { transform: scale(0.9); }
+.nico { font-size: 1.15rem; line-height: 1; }
+.nlbl { font-family: 'DM Mono', monospace; font-size: 0.42rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.ni.on .nlbl { color: var(--gold); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <div id="splash" class="screen active">
+    <div class="splash-glow"></div>
+    <div class="logo">WARE</div>
+    <div class="logo-tag">Fashion Intelligence</div>
+    <div class="tagline">"Your wardrobe already<br>knows who you are."</div>
+    <div class="tagline-sub">Style intelligence that learns from what you wear — and helps you use it better, buy smarter, and dress with intention.</div>
+    <button class="btn btn-gold" onclick="go('ob1')">Discover My Style</button>
+    <button class="btn btn-ghost" onclick="goN('home','nh')">I already have an account</button>
+  </div>
+
+  <!-- ONBOARD 1 -->
+  <div id="ob1" class="screen">
+    <div class="ob-top">
+      <div class="step-pill">✦ Step 1 of 3</div>
+      <div class="ob-h">Share outfits<br>you <em>love.</em></div>
+      <div class="ob-p">Worn or just saved — we extract your style DNA from the images.</div>
+    </div>
+    <div class="ob-body">
+      <div class="pgrid">
+        <div class="pslot ok" onclick="pulse(this)"><div class="psi"><div class="psi-t" style="background:#2d3548"></div><div class="psi-m" style="background:#1a1d24"></div><div class="psi-b" style="background:#1c2030"></div></div><div class="pchk">✓</div></div>
+        <div class="pslot ok" onclick="pulse(this)"><div class="psi"><div class="psi-t" style="background:#3d3228"></div><div class="psi-m" style="background:#1a1814"></div><div class="psi-b" style="background:#2a2520"></div></div><div class="pchk">✓</div></div>
+        <div class="pslot ok" onclick="pulse(this)"><div class="psi"><div class="psi-t" style="background:#2e2e28"></div><div class="psi-m" style="background:#1e1e18"></div><div class="psi-b" style="background:#28281e"></div></div><div class="pchk">✓</div></div>
+        <div class="pslot" onclick="flashSlot(this)"><div class="plus-ico">＋</div><div class="plus-lbl">Add look</div></div>
+        <div class="pslot" onclick="flashSlot(this)"><div class="plus-ico">＋</div><div class="plus-lbl">Add look</div></div>
+        <div></div>
+      </div>
+    </div>
+    <div class="ob-foot">
+      <div class="prog"><div class="pdot on"></div><div class="pdot"></div><div class="pdot"></div></div>
+      <button class="btn btn-gold" onclick="go('ob2')">Continue →</button>
+      <button class="btn btn-ghost" onclick="go('splash')">← Back</button>
+    </div>
+  </div>
+
+  <!-- ONBOARD 2 -->
+  <div id="ob2" class="screen">
+    <div class="ob-top">
+      <div class="step-pill">✦ Step 2 of 3</div>
+      <div class="ob-h">Your <em>anchor</em><br>pieces.</div>
+      <div class="ob-p">Tag 5–10 most-worn or favorite items to calibrate the AI.</div>
+    </div>
+    <div class="ob-body">
+      <div class="item-input-list">
+        <div class="item-row-input"><div class="iri-color" style="background:#2d3548"></div><div class="iri-label">Navy Wool Blazer</div><div class="iri-tag">Most worn</div></div>
+        <div class="item-row-input"><div class="iri-color" style="background:#e8e4dc"></div><div class="iri-label">White Cotton Shirt</div><div class="iri-tag">Anchor</div></div>
+        <div class="item-row-input"><div class="iri-color" style="background:#1c2030"></div><div class="iri-label">Dark Slim Trousers</div><div class="iri-tag">Most worn</div></div>
+        <div class="item-row-input"><div class="iri-color" style="background:#3d3228"></div><div class="iri-label">Camel Overcoat</div><div class="iri-tag">Signature</div></div>
+        <div class="item-row-input"><div class="iri-color" style="background:#8c8578"></div><div class="iri-label">White Sneakers</div><div class="iri-tag">Anchor</div></div>
+      </div>
+    </div>
+    <div class="ob-foot">
+      <div class="prog"><div class="pdot done"></div><div class="pdot on"></div><div class="pdot"></div></div>
+      <button class="btn btn-gold" onclick="go('ob3')">Continue →</button>
+      <button class="btn btn-ghost" onclick="go('ob1')">← Back</button>
+    </div>
+  </div>
+
+  <!-- ONBOARD 3 -->
+  <div id="ob3" class="screen">
+    <div class="ob-top">
+      <div class="step-pill">✦ Step 3 of 3</div>
+      <div class="ob-h">Your <em>body</em><br>proportions.</div>
+      <div class="ob-p">We show items on similar body types and explain fit logic for you.</div>
+    </div>
+    <div class="ob-body">
+      <div class="body-options">
+        <div class="bopt sel" onclick="selectBody(this)"><div class="bopt-icon">🧍</div><div class="bopt-name">Athletic</div><div class="bopt-desc">Defined shoulders</div></div>
+        <div class="bopt" onclick="selectBody(this)"><div class="bopt-icon">🧍</div><div class="bopt-name">Lean</div><div class="bopt-desc">Slim, longer torso</div></div>
+        <div class="bopt" onclick="selectBody(this)"><div class="bopt-icon">🧍</div><div class="bopt-name">Broad</div><div class="bopt-desc">Wider shoulders</div></div>
+        <div class="bopt" onclick="selectBody(this)"><div class="bopt-icon">🧍</div><div class="bopt-name">Tall</div><div class="bopt-desc">Long, elongated frame</div></div>
+      </div>
+    </div>
+    <div class="ob-foot">
+      <div class="prog"><div class="pdot done"></div><div class="pdot done"></div><div class="pdot on"></div></div>
+      <button class="btn btn-gold" onclick="go('processing')">Build My Style Profile →</button>
+      <button class="btn btn-ghost" onclick="go('ob2')">← Back</button>
+    </div>
+  </div>
+
+  <!-- PROCESSING -->
+  <div id="processing" class="screen">
+    <div class="proc-lbl">Analyzing</div>
+    <div class="ring"></div>
+    <div class="proc-title">Building your<br>style profile…</div>
+    <div class="plist">
+      <div class="pitem done"><span class="pico">✓</span>Scanning color palette</div>
+      <div class="pitem done"><span class="pico">✓</span>Mapping silhouettes & formality</div>
+      <div class="pitem done"><span class="pico">✓</span>Calibrating anchor pieces</div>
+      <div class="pitem act"><span class="pico">◌</span>Detecting wardrobe gaps</div>
+      <div class="pitem"><span class="pico">·</span>Building style archetype</div>
+      <div class="pitem"><span class="pico">·</span>Generating first outfit combinations</div>
+    </div>
+    <button class="btn btn-gold" style="width:100%;margin-top:2.5rem" onclick="go('profile')">View My Profile →</button>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="profile" class="screen">
+    <div class="prof-hero">
+      <div class="hero-lbl">✦ Your Style Archetype</div>
+      <div class="archetype">Cool<br><em>Minimalist</em></div>
+      <div class="arch-desc">Clean silhouettes, a restrained neutral palette, and deliberate layering. You dress with conviction — not trend.</div>
+      <div class="palette">
+        <div class="sw" style="background:#2d3548"></div><div class="sw" style="background:#1c1c1c"></div><div class="sw" style="background:#3d3228"></div><div class="sw" style="background:#8c8578"></div><div class="sw" style="background:#e8e4dc"></div>
+        <div class="sw-lbl">Your signature palette</div>
+      </div>
+    </div>
+    <div class="prof-body">
+      <div class="slbl">Style Intelligence Scores</div>
+      <div class="stat"><div class="sname">Versatility</div><div class="strk"><div class="sfil" style="width:82%"></div></div><div class="sval">82</div></div>
+      <div class="stat"><div class="sname">Consistency</div><div class="strk"><div class="sfil" style="width:91%"></div></div><div class="sval">91</div></div>
+      <div class="stat"><div class="sname">Confidence</div><div class="strk"><div class="sfil" style="width:76%"></div></div><div class="sval">76</div></div>
+      <div class="stat"><div class="sname">Style Range</div><div class="strk"><div class="sfil" style="width:58%"></div></div><div class="sval">58</div></div>
+      <div class="slbl">Wardrobe Insights</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.2rem;">
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:13px;padding:12px 14px;font-size:0.76rem;color:var(--stone2);line-height:1.55;">💡 <strong style="color:var(--text)">You prefer structured silhouettes.</strong> 4 of your 5 anchor pieces have a clean, defined line.</div>
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:13px;padding:12px 14px;font-size:0.76rem;color:var(--stone2);line-height:1.55;">💡 <strong style="color:var(--text)">Gap detected: versatile mid-layer.</strong> Adding one unlocks ~14 new combinations.</div>
+      </div>
+      <div class="slbl">First Outfits Built for You</div>
+      <div class="orow">
+        <div class="ocard" onclick="goN('outfit','no')"><div class="ocard-img" style="background:#141820"><div style="background:#2d3548;border-radius:9px;flex:1.2"></div><div style="background:#1a1d24;border-radius:3px;height:7px"></div><div style="background:#1c2030;border-radius:9px;flex:1.5"></div></div><div class="ocard-info"><div class="ocard-score">SAS 94</div><div class="ocard-name">Navy Foundation</div><div class="ocard-ctx">Work · Meetings</div></div></div>
+        <div class="ocard" onclick="goN('outfit','no')"><div class="ocard-img" style="background:#16140e"><div style="background:#3d3228;border-radius:9px;flex:1.2"></div><div style="background:#1a1814;border-radius:3px;height:7px"></div><div style="background:#2a2520;border-radius:9px;flex:1.5"></div></div><div class="ocard-info"><div class="ocard-score">SAS 87</div><div class="ocard-name">Warm Neutral</div><div class="ocard-ctx">Casual · Weekend</div></div></div>
+        <div class="ocard" onclick="goN('outfit','no')"><div class="ocard-img" style="background:#111110"><div style="background:#222220;border-radius:9px;flex:1.2"></div><div style="background:#141414;border-radius:3px;height:7px"></div><div style="background:#1c1c1a;border-radius:9px;flex:1.5"></div></div><div class="ocard-info"><div class="ocard-score">SAS 81</div><div class="ocard-name">All Dark</div><div class="ocard-ctx">Evening · Social</div></div></div>
+      </div>
+      <br>
+      <button class="btn btn-gold" onclick="goN('home','nh')">Enter My Wardrobe →</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="home" class="screen">
+    <div class="home-top">
+      <div class="date-line">Friday · 15 Feb · 22°C ☁</div>
+      <div class="home-name">Good morning,<br><em>Rafael.</em></div>
+    </div>
+    <div class="insight-card" onclick="goN('outfit','no')">
+      <div class="ic-lbl">✦ Today's Insight</div>
+      <div class="ic-text">You have a meeting at 10am. Your navy pieces have your highest Confidence Index this week.</div>
+      <div class="ic-cta">Tap to see suggested outfit →</div>
+    </div>
+    <div class="hsec">
+      <div class="hsh"><div class="hst">Outfits for Today</div><button class="hmore">See all</button></div>
+      <div class="dscroll">
+        <div class="dcard featured" onclick="goN('outfit','no')"><div class="dcard-img" style="background:#141820"><div class="badge">Top Pick</div><div style="background:#2d3548;border-radius:11px;flex:1.2"></div><div style="background:#1a1d24;border-radius:3px;height:6px"></div><div style="background:#1c2030;border-radius:11px;flex:1.5"></div><div class="dscore">94</div></div><div class="dcard-info"><div class="dname">Navy Foundation</div><div class="dctx">Work · Meetings</div></div></div>
+        <div class="dcard" onclick="goN('outfit','no')"><div class="dcard-img" style="background:#16140e"><div style="background:#3d3228;border-radius:11px;flex:1.2"></div><div style="background:#1a1814;border-radius:3px;height:6px"></div><div style="background:#2a2520;border-radius:11px;flex:1.5"></div><div class="dscore">81</div></div><div class="dcard-info"><div class="dname">Warm Neutral</div><div class="dctx">Casual · Weekend</div></div></div>
+        <div class="dcard" onclick="goN('outfit','no')"><div class="dcard-img" style="background:#111110"><div style="background:#222220;border-radius:11px;flex:1.2"></div><div style="background:#141414;border-radius:3px;height:6px"></div><div style="background:#1c1c1a;border-radius:11px;flex:1.5"></div><div class="dscore">76</div></div><div class="dcard-info"><div class="dname">All Dark</div><div class="dctx">Evening · Social</div></div></div>
+      </div>
+    </div>
+    <div class="hsec" style="margin-top:20px">
+      <div class="hsh"><div class="hst">Wardrobe Gap · Shop</div><button class="hmore">See all</button></div>
+      <div class="shopcard"><div class="shopimg" style="background:#1a1e2a"><div style="background:#2a3040;border-radius:8px;flex:1;margin-bottom:4px"></div><div style="background:#1e2230;border-radius:8px;flex:1.5"></div></div><div class="shopinfo"><div class="shoptag">✦ Gap Fill · 14 combos unlocked</div><div class="shopname">Wool Overshirt, Slate</div><div class="shopunlock">Style alignment 89% · Work, casual & social contexts.</div><div class="shopprice">R$ 380</div></div></div>
+      <div class="shopcard"><div class="shopimg" style="background:#1e1a14"><div style="background:#3a3020;border-radius:8px;flex:1;margin-bottom:4px"></div><div style="background:#2a2418;border-radius:8px;flex:1.5"></div></div><div class="shopinfo"><div class="shoptag">✦ Style Aligned · 9 combos unlocked</div><div class="shopname">Tapered Chino, Sand</div><div class="shopunlock">92% style alignment. Fills trouser gap in your wardrobe.</div><div class="shopprice">R$ 220</div></div></div>
+    </div>
+    <div style="height:88px"></div>
+  </div>
+
+  <!-- OUTFIT DETAIL -->
+  <div id="outfit" class="screen">
+    <div class="od-hero">
+      <div class="back-btn" onclick="goN('home','nh')">←</div>
+      <div class="od-clothes">
+        <div class="od-piece" style="background:#2d3548;border-radius:10px 10px 4px 4px"></div>
+        <div class="od-piece" style="background:#1a1d24;border-radius:4px;max-height:18px;flex:none"></div>
+        <div class="od-piece" style="background:#1c2030;border-radius:4px 4px 10px 10px"></div>
+      </div>
+      <div class="od-score-big">94</div>
+      <div class="od-score-lbl">Style<br>Alignment</div>
+    </div>
+    <div class="od-body">
+      <div class="od-title">Navy Foundation</div>
+      <div class="od-ctx">Work · Meetings · Friday · 22°C</div>
+      <div class="why-box">
+        <div class="why-lbl">✦ Why this works for you</div>
+        <div class="why-txt">Your navy blazer has your highest Confidence Index this week. Structured top, clean bottom, deliberate layer — your most-worn pattern.</div>
+      </div>
+      <div class="slbl" style="margin-top:0">Pieces · Versatility Scores</div>
+      <div class="pieces">
+        <div class="piece-row"><div class="pc" style="background:#2d3548"></div><div style="flex:1"><div class="pc-name">Navy Wool Blazer</div><div class="pc-cat">Outerwear · Anchor piece</div></div><div class="pc-vs">VS 88</div></div>
+        <div class="piece-row"><div class="pc" style="background:#e8e4dc"></div><div style="flex:1"><div class="pc-name">White Cotton Shirt</div><div class="pc-cat">Top · Most versatile item</div></div><div class="pc-vs">VS 94</div></div>
+        <div class="piece-row"><div class="pc" style="background:#1c2030"></div><div style="flex:1"><div class="pc-name">Dark Slim Trousers</div><div class="pc-cat">Bottom · High usage</div></div><div class="pc-vs">VS 79</div></div>
+      </div>
+      <button class="btn btn-gold" onclick="go('confirm')">✓ I Wore This Today</button>
+      <button class="btn btn-ghost" style="margin-top:0.6rem" onclick="goN('home','nh')">Try Another Outfit</button>
+    </div>
+  </div>
+
+  <!-- CONFIRM -->
+  <div id="confirm" class="screen">
+    <div class="conf-star">✦</div>
+    <div class="conf-title">Logged.</div>
+    <div class="conf-sub">Navy Foundation · Friday 15 Feb<br>Confidence Index updated.</div>
+    <div class="conf-ins">
+      <div class="ci-lbl">Style Intelligence</div>
+      <div class="ci-txt">You've worn navy pieces in 4 of your last 5 work days. It's your highest-confidence palette. Your style data confirms what you already knew.</div>
+    </div>
+    <button class="btn btn-gold" onclick="goN('home','nh')">← Back to Home</button>
+    <button class="btn btn-ghost" style="margin-top:0.6rem" onclick="goN('social','ns')">Share with Friends</button>
+  </div>
+
+  <!-- ══ SOCIAL ══ -->
+  <div id="social" class="screen">
+    <div class="soc-header">
+      <div class="soc-title">Style Social</div>
+      <div class="soc-sub">Your circle + the community. No follower counts. No algorithm.</div>
+      <div class="tab-bar">
+        <button class="tab-btn on" id="tab-circle" onclick="switchTab('circle')">My Circle</button>
+        <button class="tab-btn" id="tab-discover" onclick="switchTab('discover')">Discover</button>
+        <button class="tab-btn" id="tab-feed" onclick="switchTab('feed')">Following</button>
+      </div>
+    </div>
+
+    <!-- CIRCLE -->
+    <div id="panel-circle" class="tab-panel on">
+      <div class="friend-card">
+        <div class="fr-top">
+          <div class="fr-av" style="background:#1a2030">👤</div>
+          <div style="flex:1"><div class="fr-name">Ana Costa</div><div class="fr-arch">Warm Minimalist</div></div>
+          <div><div class="fr-ovn">72%</div><div class="fr-ovl">compat.</div></div>
+        </div>
+        <div class="fr-thumbs">
+          <div class="fr-th" style="background:#1e1a14"><div style="background:#3d3228;border-radius:5px;flex:1"></div><div style="background:#2a2520;border-radius:5px;flex:1.5;margin-top:3px"></div></div>
+          <div class="fr-th" style="background:#16141a"><div style="background:#2d2438;border-radius:5px;flex:1"></div><div style="background:#201c2a;border-radius:5px;flex:1.5;margin-top:3px"></div></div>
+          <div class="fr-th" style="background:#1a1810"><div style="background:#2e2818;border-radius:5px;flex:1"></div><div style="background:#241e14;border-radius:5px;flex:1.5;margin-top:3px"></div></div>
+        </div>
+        <div class="fr-activity"><strong>Ana</strong> created 3 work outfits this week. Experimenting with structured blazers.</div>
+        <div class="fr-react"><strong>Ana reacted:</strong> "Matches your Cool Minimalist profile perfectly."</div>
+        <div class="react-row">
+          <div class="react-pill reacted" onclick="toggleReact(this)">✦ Matches your profile</div>
+          <div class="react-pill" onclick="toggleReact(this)">Unlocks combos for me too</div>
+        </div>
+      </div>
+      <div class="friend-card">
+        <div class="fr-top">
+          <div class="fr-av" style="background:#1a1414">👤</div>
+          <div style="flex:1"><div class="fr-name">Lucas Mendes</div><div class="fr-arch">Urban Edge</div></div>
+          <div><div class="fr-ovn">48%</div><div class="fr-ovl">compat.</div></div>
+        </div>
+        <div class="fr-thumbs">
+          <div class="fr-th" style="background:#111111"><div style="background:#1c1c1c;border-radius:5px;flex:1"></div><div style="background:#141414;border-radius:5px;flex:1.5;margin-top:3px"></div></div>
+          <div class="fr-th" style="background:#14100e"><div style="background:#2a1c14;border-radius:5px;flex:1"></div><div style="background:#1c140e;border-radius:5px;flex:1.5;margin-top:3px"></div></div>
+          <div class="fr-th" style="background:#111118"><div style="background:#1c1c2a;border-radius:5px;flex:1"></div><div style="background:#14141e;border-radius:5px;flex:1.5;margin-top:3px"></div></div>
+        </div>
+        <div class="fr-activity"><strong>Lucas</strong> is experimenting with relaxed silhouettes. 3 new outfits added.</div>
+        <div class="react-row">
+          <div class="react-pill" onclick="toggleReact(this)">✦ Matches your profile</div>
+          <div class="react-pill" onclick="toggleReact(this)">Unlocks combos for me too</div>
+        </div>
+      </div>
+      <div style="padding:0 28px 16px">
+        <button class="btn btn-ghost" onclick="switchTab('discover')" style="margin-top:0">+ Invite friends to your circle</button>
+      </div>
+    </div>
+
+    <!-- DISCOVER -->
+    <div id="panel-discover" class="tab-panel">
+      <div style="padding:14px 28px 0">
+        <div class="slbl" style="margin-top:0">Suggested for You</div>
+      </div>
+      <div class="suggested-strip" style="padding-left:28px">
+        <div class="sug-card">
+          <div class="sug-av" style="background:#1a2030">👤</div>
+          <div class="sug-name">@mia.style</div>
+          <div class="sug-arch">Cool Minimalist</div>
+          <button class="sug-follow" onclick="toggleFollow(this)">Follow</button>
+        </div>
+        <div class="sug-card">
+          <div class="sug-av" style="background:#1e1a14">👤</div>
+          <div class="sug-name">@tom.fits</div>
+          <div class="sug-arch">Smart Casual</div>
+          <button class="sug-follow" onclick="toggleFollow(this)">Follow</button>
+        </div>
+        <div class="sug-card">
+          <div class="sug-av" style="background:#111118">👤</div>
+          <div class="sug-name">@dark.layer</div>
+          <div class="sug-arch">Urban Edge</div>
+          <button class="sug-follow following" onclick="toggleFollow(this)">Following</button>
+        </div>
+        <div class="sug-card">
+          <div class="sug-av" style="background:#1a1810">👤</div>
+          <div class="sug-name">@elle.ware</div>
+          <div class="sug-arch">Relaxed Classic</div>
+          <button class="sug-follow" onclick="toggleFollow(this)">Follow</button>
+        </div>
+      </div>
+      <div style="padding:0 28px">
+        <div class="slbl">Trending Profiles</div>
+      </div>
+      <div class="discover-grid">
+
+        <div class="creator-card">
+          <div class="creator-top">
+            <div class="creator-av verified" style="background:#1a2030">👤</div>
+            <div class="creator-info">
+              <div class="creator-name">@mia.style</div>
+              <div class="creator-arch">Cool Minimalist · Athletic build</div>
+              <div class="creator-followers">2.4k followers</div>
+            </div>
+            <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
+          </div>
+          <div class="creator-outfits">
+            <div class="creator-outfit-thumb" style="background:#141820"><div style="background:#2d3548;border-radius:7px;flex:1.2"></div><div style="background:#1a1d24;border-radius:3px;height:6px"></div><div style="background:#1c2030;border-radius:7px;flex:1.5"></div><span class="save-ico" onclick="toggleSave(this)">◆</span></div>
+            <div class="creator-outfit-thumb" style="background:#16140e"><div style="background:#3d3228;border-radius:7px;flex:1.2"></div><div style="background:#1a1814;border-radius:3px;height:6px"></div><div style="background:#2a2520;border-radius:7px;flex:1.5"></div><span class="save-ico" onclick="toggleSave(this)">◆</span></div>
+            <div class="creator-outfit-thumb" style="background:#111110"><div style="background:#1c1c1c;border-radius:7px;flex:1.2"></div><div style="background:#141414;border-radius:3px;height:6px"></div><div style="background:#1c1c1a;border-radius:7px;flex:1.5"></div><span class="save-ico" onclick="toggleSave(this)">◆</span></div>
+          </div>
+          <div class="compat-bar">
+            <div class="compat-label">Style Compat.</div>
+            <div class="compat-track"><div class="compat-fill" style="width:88%"></div></div>
+            <div class="compat-val">88%</div>
+          </div>
+        </div>
+
+        <div class="creator-card">
+          <div class="creator-top">
+            <div class="creator-av" style="background:#1e1a14">👤</div>
+            <div class="creator-info">
+              <div class="creator-name">@tom.fits</div>
+              <div class="creator-arch">Smart Casual · Lean build</div>
+              <div class="creator-followers">980 followers</div>
+            </div>
+            <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
+          </div>
+          <div class="creator-outfits">
+            <div class="creator-outfit-thumb" style="background:#1e1a14"><div style="background:#3a3020;border-radius:7px;flex:1.2"></div><div style="background:#2a2418;border-radius:3px;height:6px"></div><div style="background:#1e1a14;border-radius:7px;flex:1.5"></div><span class="save-ico" onclick="toggleSave(this)">◆</span></div>
+            <div class="creator-outfit-thumb" style="background:#1a1e2a"><div style="background:#2a3040;border-radius:7px;flex:1.2"></div><div style="background:#1e2230;border-radius:3px;height:6px"></div><div style="background:#141820;border-radius:7px;flex:1.5"></div><span class="save-ico" onclick="toggleSave(this)">◆</span></div>
+            <div class="creator-outfit-thumb" style="background:#16140e"><div style="background:#3d3228;border-radius:7px;flex:1.2"></div><div style="background:#2a2520;border-radius:3px;height:6px"></div><div style="background:#1e1a14;border-radius:7px;flex:1.5"></div><span class="save-ico" onclick="toggleSave(this)">◆</span></div>
+          </div>
+          <div class="compat-bar">
+            <div class="compat-label">Style Compat.</div>
+            <div class="compat-track"><div class="compat-fill" style="width:64%"></div></div>
+            <div class="compat-val">64%</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FOLLOWING FEED -->
+    <div id="panel-feed" class="tab-panel">
+      <div style="padding:14px 28px 12px">
+        <div style="font-size:0.74rem;color:var(--stone);line-height:1.6;">Activity from people you follow. No algorithm — chronological only.</div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-top">
+          <div class="feed-av" style="background:#111118">👤</div>
+          <div><div class="feed-name">@dark.layer</div><div class="feed-time">2h ago · Urban Edge</div></div>
+        </div>
+        <div class="feed-img" style="background:var(--s2);border-radius:12px;margin:0 14px 10px;height:160px;">
+          <div style="background:#1c1c2a;border-radius:9px;flex:1.2;margin-top:10px"></div>
+          <div style="background:#14141e;border-radius:3px;height:6px"></div>
+          <div style="background:#111118;border-radius:9px;flex:1.5;margin-bottom:10px"></div>
+        </div>
+        <div class="feed-bottom">
+          <div class="feed-compat">67% compat.</div>
+          <div class="feed-react" onclick="toggleFeedReact(this)">✦ Matches profile</div>
+          <div class="feed-save" onclick="toggleFeedSave(this)">◆ Save item</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-top">
+          <div class="feed-av" style="background:#1a2030">👤</div>
+          <div><div class="feed-name">@mia.style</div><div class="feed-time">5h ago · Cool Minimalist</div></div>
+        </div>
+        <div class="feed-img" style="background:var(--s2);border-radius:12px;margin:0 14px 10px;height:160px;">
+          <div style="background:#2d3548;border-radius:9px;flex:1.2;margin-top:10px"></div>
+          <div style="background:#1a1d24;border-radius:3px;height:6px"></div>
+          <div style="background:#1c2030;border-radius:9px;flex:1.5;margin-bottom:10px"></div>
+        </div>
+        <div class="feed-bottom">
+          <div class="feed-compat">88% compat.</div>
+          <div class="feed-react on" onclick="toggleFeedReact(this)">✦ Matches profile</div>
+          <div class="feed-save" onclick="toggleFeedSave(this)">◆ Save item</div>
+        </div>
+      </div>
+
+      <div style="padding:10px 28px 16px">
+        <button class="btn btn-ghost" onclick="switchTab('discover')" style="margin-top:0">Discover more profiles →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav" id="bnav">
+    <button class="ni" id="nh" onclick="goN('home','nh')"><div class="nico">⌂</div><div class="nlbl">Home</div></button>
+    <button class="ni" id="no" onclick="goN('outfit','no')"><div class="nico">◻</div><div class="nlbl">Outfits</div></button>
+    <button class="ni" id="nsh" onclick="goN('home','nsh')"><div class="nico">◈</div><div class="nlbl">Shop</div></button>
+    <button class="ni" id="ns" onclick="goN('social','ns')"><div class="nico">◎</div><div class="nlbl">Friends</div></button>
+    <button class="ni" id="np" onclick="goN('profile','np')"><div class="nico">◉</div><div class="nlbl">Profile</div></button>
+  </nav>
+</div>
+
+<script>
+const MAIN = ['home','outfit','confirm','social','profile'];
+function go(id) {
+  const cur = document.querySelector('.screen.active');
+  if (cur) { cur.classList.remove('active'); cur.classList.add('exit'); setTimeout(()=>cur.classList.remove('exit'),300); }
+  const next = document.getElementById(id);
+  if (next) { next.style.transform='translateX(24px)'; next.classList.add('active'); next.scrollTop=0; }
+  document.getElementById('bnav').classList.toggle('show', MAIN.includes(id));
+}
+function goN(sid, nid) {
+  go(sid);
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  const n = document.getElementById(nid); if (n) n.classList.add('on');
+}
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('tab-'+tab).classList.add('on');
+  document.getElementById('panel-'+tab).classList.add('on');
+}
+function toggleFollow(btn) {
+  const f = btn.classList.toggle('following');
+  btn.textContent = f ? 'Following' : 'Follow';
+}
+function toggleSave(el) { el.classList.toggle('saved'); }
+function toggleReact(el) { el.classList.toggle('reacted'); }
+function toggleFeedReact(el) { el.classList.toggle('on'); }
+function toggleFeedSave(el) { el.textContent = el.textContent.includes('Saved') ? '◆ Save item' : '◆ Saved'; el.style.color = el.textContent.includes('Saved') ? 'var(--gold2)' : ''; }
+function flashSlot(el) { el.style.borderColor='rgba(184,147,90,0.6)'; el.style.background='rgba(184,147,90,0.06)'; setTimeout(()=>{el.style.borderColor='';el.style.background='';},300); }
+function pulse(el) { el.style.opacity='0.5'; setTimeout(()=>el.style.opacity='1',200); }
+function selectBody(el) { document.querySelectorAll('.bopt').forEach(b=>b.classList.remove('sel')); el.classList.add('sel'); }
+</script>
+</body>
+</html>
